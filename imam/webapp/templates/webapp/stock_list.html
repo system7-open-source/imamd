@@ -1,0 +1,145 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+{% load compress %}
+{% load i18n %}
+{% load bootstrap_pagination %}
+{% load crispy_forms_tags %}
+{% block style_block %}
+    {% compress css %}
+        <link rel="stylesheet" href="{% static "select2/select2.css" %}">
+        <link rel="stylesheet" href="{% static "select2-bootstrap-css/select2-bootstrap.css" %}">
+        <link rel="stylesheet" href="{% static "bootstrap-datepicker/dist/css/bootstrap-datepicker.css" %}">
+    {% endcompress %}
+{% endblock %}
+{% block page_content %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul id="stockTab" class="nav nav-tabs">
+                <li class="active"><a href="#stockreports" data-toggle="tab"><i
+                        class="icon-medkit"></i> Stock reports</a></li>
+                <li><a href="#alerts" data-toggle="tab"><i
+                        class="icon-warning-sign"></i> Stock out alerts</a></li>
+            </ul>
+            <div id="stockTabContent" class="tab-content">
+                <div class="tab-pane active" id="stockreports">
+                    <div class="well well-small">
+                        <button class="btn btn-primary"
+                                type="button"
+                                data-target="#stockFilterModal"
+                                data-toggle="modal">
+                            <i class="glyphicon glyphicon-filter"></i>
+                            Filter data
+                        </button>
+                    </div>
+                    {% if reports %}
+                        <table class="table table-hover table-striped table-bordered"
+                               width="100%">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Site" %}</th>
+                                <th>{% trans "Site ID" %}</th>
+                                <th>{% trans "Location" %}</th>
+                                <th>{% trans "Reported at" %}</th>
+                                <th>{% trans "Item" %}</th>
+                                <th>{% trans "Last quantity received" %}</th>
+                                <th>{% trans "Current stock" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for report in reports %}
+                                <tr>
+                                    <td rowspan="{{ report.logs.count|add:'1' }}">{{ report.site.name }}</td>
+                                    <td rowspan="{{ report.logs.count|add:'1' }}">{{ report.site.hcid }}</td>
+                                    <td rowspan="{{ report.logs.count|add:'1' }}">{{ report.site.location_path }}</td>
+                                    <td rowspan="{{ report.logs.count|add:'1' }}">{{ report.created|date:"H:i:s d/m/Y" }}</td>
+                                    {% for log in report.logs.all %}
+                                        {% if log.last_quantity_received < 0 or log.current_holding == 0 %}
+                                            <tr class="warning">
+                                                {% else %}
+                                            <tr>
+                                        {% endif %}
+                                    <td>{{ log.item.code }}</td>
+                                    <td>{{ log.last_quantity_received }}</td>
+                                    <td>{{ log.current_holding }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>{% trans "No reports" %}</p>
+                    {% endif %}
+                    {% if is_paginated %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                {% bootstrap_paginate page_obj range=10 %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="tab-pane" id="alerts">
+                    <div id="alertTable"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="stockFilterModal" role="dialog"
+         aria-hidden="true"
+         aria-labelledby="stockFilterModalLabel">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">×
+                    </button>
+                    <h3 class="modal-title" id="stockFilterModalLabel">Filter
+                        data set</h3>
+                </div>
+                <div class="modal-body">
+                    {% crispy filter_form %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block tail_script %}
+    <script src="{% static "bootstrap-datepicker/dist/js/bootstrap-datepicker.js" %}"></script>
+    <script src="{% static "underscore/underscore.js" %}"></script>
+    <script src="{% static "moment/moment.js" %}"></script>
+    <script src="{% static "stringjs/lib/string.js" %}"></script>
+    <script src="{% static "select2/select2.js" %}"></script>
+    <script src="{% static "tabler/lib/tabler/tabler.js" %}"></script>
+    <script src="{% static "tabler/lib/tabler/tabler.pager.js" %}"></script>
+    <script src="{% static "js/filters.js" %}"></script>
+    <script>
+        var stockOutTable = tabler.create([
+            {field: 'location', name: 'Site'},
+            {field: 'site_id', name: 'Site ID'},
+            {field: 'path', name: 'Location'},
+            {field: 'items', name: 'Items'},
+            {
+                field: 'date', name: 'Time', formatter: function (data) {
+                return moment.unix(data).format('HH:mm:ss DD/MM/YYYY');
+            }
+            }
+        ], {
+            className: 'table table-striped table-bordered table-hover',
+            plugins: [tabler.pager],
+            pager: {
+                pageSize: 25
+            }
+        });
+
+        function renderStockOuts(url) {
+            $.getJSON(url, function (data) {
+                stockOutTable.load(data.objects);
+                stockOutTable.render();
+            });
+
+            $('#alertTable').html(stockOutTable.$el);
+        }
+
+        renderStockOuts("{% url 'api_dispatch_list' resource_name='stockouts' api_name='v1' %}?limit=0");
+    </script>
+{% endblock %}

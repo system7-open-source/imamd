@@ -1,0 +1,93 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load bootstrap_pagination %}
+{% load crispy_forms_tags %}
+{% load site_extras %}
+{% block style_block %}
+    <link rel="stylesheet" href="{% static "select2/select2.css" %}">
+    <link rel="stylesheet" href="{% static "select2-bootstrap-css/select2-bootstrap.css" %}">
+{% endblock %}
+{% block page_content %}
+    <div class="row">
+        <div class="col-md-12">
+            <h3><i class="icon-hospital"></i> {% trans "Sites" %}</h3>
+            {% if sites %}
+                <div class="well well-small">
+                    <a class="btn btn-primary" href="#filterModal" role="btn"
+                       data-toggle="modal"><i class="icon-filter"></i> Filter
+                        displayed sites</a>
+                    {#{% if user.is_authenticated %}#}
+                    {#<a class="btn btn-primary" href="{% url 'site_new' %}"><i class="icon-plus"></i> Add new site</a>#}
+                    {#{% endif %}#}
+                </div>
+                <table class="table table-striped table-bordered" width="100%">
+                    <thead>
+                    <tr>
+                        {% for location_type in location_types|remove_unused_location_types %}
+                            <th>{% trans location_type.name %}</th>
+                        {% endfor %}
+                        <th>{% trans "Site ID" %}</th>
+                        <th>{% trans "Site Type" %}</th>
+                        <th>{% trans "Latitude" %}</th>
+                        <th>{% trans "Longitude" %}</th>
+                        <th>{% trans "NGO support" %}</th>
+                        <th>{% trans "Date site opened" %}</th>
+                        <th>{% trans "Date site closed" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for center in sites %}
+                        <tr>
+                            {% for ancestor in center.get_ancestors|list_ancestors %}
+                                <td>{{ ancestor.name }}</td>
+                            {% endfor %}
+                            <td>{{ center.name }}</td>
+                            <td>{{ center.hcid }}</td>
+                            <td>{{ center.printable_programmes }}</td>
+                            <td>{{ center.location_pnt.latitude|default_if_none:"" }}</td>
+                            <td>{{ center.location_pnt.longitude|default_if_none:"" }}</td>
+                            <td>{{ center.extra.agency|default_if_none:"" }}</td>
+                            <td>{{ center.extra.opened|default_if_none:"" }}</td>
+                            <td>{{ center.extra.closed|default_if_none:"" }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>{% trans "No sites" %}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% if is_paginated %}
+        <div class="row">
+            <div class="col-md-12">
+                {% bootstrap_paginate page_obj range=10 %}
+            </div>
+        </div>
+    {% endif %}
+    <div class="modal fade" id="filterModal" role="dialog"
+         aria-hidden="true"
+         aria-labelledby="filterModalLabel">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">×
+                    </button>
+                    <h3 class="modal-title" id="filterModalLabel">
+                        Filter displayed sites
+                    </h3>
+                </div>
+                <div class="modal-body">
+                    {% crispy filter_form %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block tail_script %}
+    <script src="{% static "stringjs/lib/string.js" %}"></script>
+    <script src="{% static "select2/select2.js" %}"></script>
+    <script src="{% static "js/filters.js" %}"></script>
+{% endblock %}

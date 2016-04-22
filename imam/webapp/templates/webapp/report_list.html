@@ -1,0 +1,121 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load bootstrap_pagination %}
+{% load crispy_forms_tags %}
+{% block style_block %}
+    <link rel="stylesheet" href="{% static "select2/select2.css" %}">
+    <link rel="stylesheet" href="{% static "select2-bootstrap-css/select2-bootstrap.css" %}">
+{% endblock %}
+{% block page_content %}
+    <div class="row">
+        <div class="col-md-12">
+            <h3><i class="icon-file-alt"></i> {{ page_title }}</h3>
+
+            <div class="well well-sm">
+                <a class="btn btn-primary" href="#reportFilterModal" role="btn"
+                   data-toggle="modal"><i class="icon-filter"></i> Filter source
+                    data</a>
+            </div>
+            {% if object_list %}
+                <table class="table table-hover table-condensed table-striped table-bordered"
+                       width="100%">
+                    <thead>
+                    <tr>
+                        <th colspan="1" rowspan="2">
+                            {% trans "Site" %}</th>
+                        <th colspan="1" rowspan="2">
+                            {% trans "Reported at" %}</th>
+                        <th colspan="1" rowspan="2">
+                            {% trans "Period" %}</th>
+                        <th colspan="1" rowspan="2">
+                            {% trans "Group" %}</th>
+                        <th colspan="1" rowspan="2">
+                            {% trans "Program" %}</th>
+                        <th colspan="2"
+                            rowspan="1">{% trans "Admissions" %}</th>
+                        <th colspan="2" rowspan="1">
+                            {% trans "Transfer" %}</th>
+                        <th colspan="1" rowspan="2">
+                            {% trans "Deaths" %}</th>
+                        <th colspan="1" rowspan="2">
+                            {% trans "Defaults" %}</th>
+                        <th colspan="1" rowspan="2">
+                            {% trans "Cures" %}</th>
+                        <th colspan="1" rowspan="2">
+                            {% trans "No response" %}</th>
+                        {% if user.is_authenticated %}
+                            <th colspan="1" rowspan="2">
+                                {% trans "Edit" %}</th>
+                        {% endif %}
+                    </tr>
+                    <tr>
+                        <th>{% trans "New" %}</th>
+                        <th>{% trans "After default" %}</th>
+                        <th>{% trans "In" %}</th>
+                        <th>{% trans "Out" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for report in object_list %}
+                        <tr>
+                            <td>{{ report.site.name }}</td>
+                            <td>{{ report.report_date|date:"d/m/Y" }}</td>
+                            <td>{{ report.summary.period_name }}</td>
+                            <td>{{ report.group.description }}</td>
+                            <td>{{ report.program.code }}</td>
+                            <td>{{ report.summary.Atot }}</td>
+                            <td>{{ report.summary.Arel|default_if_none:"N/A" }}</td>
+                            <td>{{ report.summary.Tin|default_if_none:"N/A" }}</td>
+                            <td>{{ report.summary.Tout|default_if_none:"N/A" }}</td>
+                            <td>{{ report.summary.Dead|default_if_none:"N/A" }}</td>
+                            <td>{{ report.summary.DefT|default_if_none:"N/A" }}</td>
+                            <td>{{ report.summary.Dcur|default_if_none:"N/A" }}</td>
+                            <td>{{ report.summary.Dmed|default_if_none:"N/A" }}</td>
+                            {% if user.is_authenticated %}
+                                <td>
+                                    <a href="{% url 'report_edit' pk=report.pk %}"><i
+                                            class="icon-edit"></i></a></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>{% trans "No reports" %}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% if is_paginated %}
+        <div class="row">
+            <div class="col-md-12">
+                {% bootstrap_paginate page_obj range=10 %}
+            </div>
+        </div>
+    {% endif %}
+    <div class="modal fade" id="reportFilterModal" role="dialog"
+         aria-hidden="true"
+         aria-labelledby="reportFilterModalLabel">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">×
+                    </button>
+                    <h3 class="modal-title" id="reportFilterModalLabel">
+                        Filter reports
+                    </h3>
+                </div>
+                <div class="modal-body">
+                    {% crispy filter_form %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block tail_script %}
+    <script src="{% static "stringjs/lib/string.js" %}"></script>
+    <script src="{% static "select2/select2.js" %}"></script>
+    <script src="{% static "js/filters.js" %}"></script>
+{% endblock %}

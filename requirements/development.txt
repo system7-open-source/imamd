@@ -1,0 +1,7 @@
+-r production.txt
+coverage
+django-coverage
+django-debug-toolbar
+mock
+model_mommy
+Werkzeug

@@ -1,0 +1,130 @@
+{% load static %}
+{% load compress %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>{{ page_title }}</title>
+    {% compress css %}
+        <link rel="stylesheet"
+              href="{% static "bootstrap/dist/css/bootstrap.css" %}">
+        <link rel="stylesheet"
+              href="{% static "bootstrap/dist/css/bootstrap-theme.css" %}">
+        <link rel="stylesheet"
+              href="{% static "font-awesome/css/font-awesome.css" %}">
+    {% endcompress %}
+
+    {% compress css %}
+        <link rel="stylesheet" href="{% static "css/bs3imports.css" %}">
+            <link rel="stylesheet" href="{% static "css/main.css" %}">
+        <style>
+            body {
+                height: 100%;
+                padding-top: 90px;
+            }
+        </style>
+    {% endcompress %}
+    {% block style_block %}{% endblock %}
+    {% compress js %}
+        <script src="{% static "jquery/dist/jquery.js" %}"></script>
+    {% endcompress %}
+    {% block header_script %}{% endblock %}
+</head>
+
+
+<body>
+<nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                   data-target="#navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{% url 'dashboard' %}"><strong>SAM
+                    Reports</strong></a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'signout' %}"><i
+                                class="glyphicon glyphicon-log-out"></i> Log
+                            out {{ user.username }} </a></li>
+                    {% else %}
+                        <li><a href="{% url 'signin' %}"><i
+                                class="glyphicon glyphicon-log-in"></i> Log in</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+</nav>
+<div class="container">
+    <div class="row">
+        <div class="col-md-2">
+            <div class="panel">
+                <!-- <div class="panel-heading">Navigation</div> -->
+                <div class="panel-heading">
+{#                    <i class="glyphicon glyphicon-sitemap"></i>#}
+                    Navigation
+                </div>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item" href="{% url 'dashboard' %}"><i
+                            class="glyphicon glyphicon-home"></i> Dashboard</a>
+                    <a class="list-group-item" href="{% url 'reports' %}"><i
+                            class="glyphicon glyphicon-file"></i> Program
+                        reports</a>
+                    <a class="list-group-item" href="{% url 'stock_reports' %}"><i
+                            class="glyphicon glyphicon-plus"></i> Stock
+                        reports</a>
+                    <a class="list-group-item" href="{% url 'sites' %}"><i
+                            class="glyphicon glyphicon-tent"></i> Sites</a>
+                    <a class="list-group-item"
+                       href="{% url 'iso_calendar' %}"><i
+                            class="glyphicon glyphicon-calendar"></i> ISO week
+                        calendar</a>
+                    <a class="list-group-item" href="{% url 'locations_map' %}"><i
+                            class="glyphicon glyphicon-map-marker"></i> Map</a>
+                    <a class="list-group-item" href="{% url 'pdf_forms' %}"><i
+                            class="glyphicon glyphicon-file"></i> PDF Forms</a>
+                    {% if user.is_authenticated %}
+                        <a class="list-group-item"
+                           href="{% url 'messages' %}"><i
+                                class="glyphicon glyphicon-envelope"></i>
+                            Messages</a>
+                        <a class="list-group-item" href="{% url 'personnel' %}"><i
+                                class="glyphicon glyphicon-user"></i>
+                            Personnel</a>
+                        <a class="list-group-item"
+                           href="{% url 'httptester-index' %}"><i
+                                class="glyphicon glyphicon-wrench"></i> Message
+                            Tester</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% block sidebar_content %}{% endblock %}
+        </div>
+        <div class="col-md-10">
+            {% block page_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+<hr>
+<div id="footer">
+    <div class="container">
+        <p class="text-muted">UNICEF, 2013, 2014 --
+            <small>Severe Acute Malnutrition Reports -- Integrated Management of
+                Acute Malnutrition
+                -- -- web site maintained by <a href="http://system7.IT">SYSTEM7</a></small>
+        </p>
+    </div>
+</div>
+{% compress js %}
+    <script src="{% static "bootstrap/dist/js/bootstrap.js" %}"></script>
+{% endcompress %}
+{% block tail_script %}{% endblock %}
+</body>
+</html>

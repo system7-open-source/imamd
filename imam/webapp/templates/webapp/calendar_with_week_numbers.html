@@ -1,0 +1,385 @@
+{% extends 'webapp/base.html' %}
+{% load i18n %}
+{% load static %}
+{% load compress %}
+{% block style_block %}
+    {% compress css %}
+        <style type="text/css">
+            textarea.flat {
+                background-color: inherit !important;
+                color: inherit !important;
+                border-color: inherit !important;
+                font-family: monospace;
+                font-size: 13px;
+                resize: none;
+                width: 230px;
+                height: 167px;
+                border-radius: 6px;
+                padding: 7px 6px;
+                margin: 5px;
+            }
+
+            @media print {
+                .col-md-2, .navbar, .panel, .dont-print, #footer {
+                    display: none;
+                }
+
+                body {
+                    padding-top: 0 !important;
+                }
+
+            }
+        </style>
+    {% endcompress %}
+{% endblock %}
+{% block sidebar_content %}
+    <div class="panel">
+        <div class="panel-heading">{% trans "Download for print" %}</div>
+        <a href="{% static "download/calendar2014.pdf" %}">{% trans "Calendar 2014" %}</a>
+    </div>
+{% endblock %}
+{% block tail_script %}
+    {% compress js %}
+        <script type="text/javascript" language="JavaScript">
+            // author: Guido Socher except for getWeekNumber.
+
+            //--------------------------
+            /**
+             * Author of getWeekNumber function: Thomas Rabaix
+             *
+             * Small corrections by Guido Socher
+             *
+             * return the Week Number of a gregorian date using the ISO 8601 format
+             * Algorithm from http://personal.ecu.edu/mccartyr/ISOwdALG.txt , Rick McCarty
+             *
+             * ISO 8601 specifies that Week 01 of the year is the week containing
+             * the first Thursday; Monday is Weekday 1, Sunday is Weekday 7;
+             */
+            var isoHelper = {
+                getWeekNumber: function (ddate) {
+                    // 1. Convert input to Y M D
+                    var Y = ddate.getFullYear();
+                    var M = ddate.getMonth();
+                    var D = ddate.getDay();
+
+                    // 4. Find the DayOfYearNumber for Y M D
+                    var DayOfYearNumber = isoHelper.findDayOfYearNumber(ddate);
+
+                    // 5. Find the Jan1Weekday for Y (Monday=1, Sunday=7)
+                    var Jan1Weekday = isoHelper.findJan1Weekday(ddate);
+
+                    // 6. Find the Weekday for Y M D
+                    var WeekDay = isoHelper.findDayWeek(ddate);
+
+                    // 7. Find if Y M D falls in YearNumber Y-1, WeekNumber 52 or 53
+                    var YearNumber = Y;
+                    var WeekNumber = 0;
+                    if ((DayOfYearNumber <= (8 - Jan1Weekday)) && (Jan1Weekday > 4)) {
+                        YearNumber = Y - 1;
+                        ddate.setFullYear(YearNumber); // set the correct year for the isLeapYear
+                        if ((Jan1Weekday == 5) || (Jan1Weekday == 6 && isoHelper.isLeapYear(ddate))) {
+                            WeekNumber = 53;
+                        } else {
+                            WeekNumber = 52;
+                        }
+                        ddate.setFullYear(Y); // undo the chage in the ddate object
+                    }
+
+                    // 8. Find if Y M D falls in YearNumber Y+1, WeekNumber 1
+                    if (YearNumber == Y) {
+                        var I;
+                        if (isoHelper.isLeapYear(ddate)) {
+                            I = 366;
+                        } else {
+                            I = 365
+                        }
+
+                        if ((I - DayOfYearNumber) < (4 - WeekDay)) {
+                            YearNumber = Y + 1;
+                            WeekNumber = 1;
+                        }
+                    }
+
+                    // 9. Find if Y M D falls in YearNumber Y, WeekNumber 1 through 53
+                    if (YearNumber == Y) {
+                        var J;
+                        J = DayOfYearNumber + (7 - WeekDay) + (Jan1Weekday - 1);
+                        WeekNumber = J / 7;
+                        if (Jan1Weekday > 4) {
+                            WeekNumber -= 1;
+                        }
+                    }
+
+                    return WeekNumber;
+                },
+                isLeapYear: function (ddate) {
+                    var Y = ddate.getFullYear();
+                    if ((Y % 4) == 0 && (Y % 100) != 0) {
+                        return true;
+                    }
+                    return (Y % 400) == 0;
+
+                },
+                findDayOfYearNumber: function (ddate) {
+                    var months = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+
+                    var day = ddate.getDate() + months[ddate.getMonth()];
+                    // only for march and onwards in leap years:
+                    if (isoHelper.isLeapYear(ddate) && ddate.getMonth() > 1) {
+                        day++;
+                    }
+
+                    return day;
+                },
+                findJan1Weekday: function (ddate) {
+                    var d = new Date(ddate.getFullYear(), 0, 1);
+                    // convert from 0=sun .. 1=mon
+                    // to 1=mon to 7=sun
+                    return (isoHelper.findDayWeek(d));
+                },
+                findDayWeek: function (ddate) {
+                    var WeekDay = ddate.getDay();
+                    if (WeekDay == 0) {
+                        WeekDay = 7;
+                    }
+
+                    return WeekDay;
+                }
+            }
+            // date object has month in range 0..11
+            function dayspermonth(ddate) {
+                var days;
+                var dayinmonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                days = dayinmonth[ddate.getMonth()];
+                if (isoHelper.isLeapYear(ddate) && ddate.getMonth() == 1) {
+                    days++;
+                }
+                return (days);
+            }
+            //--------------------------
+            function padd_num_zero(toadd) {
+                var tmp = toadd.toString();
+                if (tmp.length < 2) {
+                    tmp = "0" + tmp;
+                }
+                return (tmp);
+            }
+            //--------------------------
+            // called at load of html page
+            function init_settings() {
+                var f = document.yearcal;
+                var dateobj = new Date();
+                var wday = new Array("{% trans "Sunday" %}", "{% trans "Monday" %}", "{% trans "Tuesday" %}", "{% trans "Wednesday" %}", "{% trans "Thursday" %}", "{% trans "Friday" %}", "{% trans "Saturday" %}");
+                calsettoday(f);
+            }
+            //--------------------------
+            function calsettoday(cform) {
+                var dateobj = new Date();
+                cform.y.value = dateobj.getFullYear();
+                fillmcal_txt_form(dateobj.getFullYear());
+            }
+            function updatecal(cform) {
+                var yyyy;
+                // error handling:
+                cform.y.value.replace(/[^0-9]/g, "");
+                yyyy = parseInt(cform.y.value);
+                if (isNaN(yyyy) || yyyy < 1 || yyyy > 9999) {
+                    cform.y.value = Number.NaN;
+                    return (1);
+                }
+                cform.y.value = yyyy;
+                fillmcal_txt_form(yyyy);
+            }
+            function yearmins(cform) {
+                var yyyy;
+                // error handling:
+                cform.y.value.replace(/[^0-9]/g, "");
+                yyyy = parseInt(cform.y.value);
+                if (isNaN(yyyy) || yyyy < 1 || yyyy > 9999) {
+                    cform.y.value = Number.NaN;
+                    return (1);
+                }
+                yyyy--;
+                if (yyyy < 1) {
+                    yyyy = 1;
+                }
+                cform.y.value = yyyy;
+                fillmcal_txt_form(yyyy);
+            }
+            function yearplus(cform) {
+                var yyyy;
+                // error handling:
+                cform.y.value.replace(/[^0-9]/g, "");
+                yyyy = parseInt(cform.y.value);
+                if (isNaN(yyyy) || yyyy < 1 || yyyy > 9999) {
+                    cform.y.value = Number.NaN;
+                    return (1);
+                }
+                yyyy++;
+                if (yyyy > 9999) {
+                    yyyy = 9999;
+                }
+                cform.y.value = yyyy;
+                fillmcal_txt_form(yyyy);
+            }
+            //--------------------------
+            function padd_num_2(toadd) {
+                var tmp = toadd.toString();
+                if (tmp.length < 2) {
+                    tmp = " " + tmp;
+                }
+                return (tmp);
+            }
+            //--------------------------
+            // mm=0..11
+            function fillmcal_txt(yyyy, mm) {
+                var dd = 1;
+                var wdayIso;
+                var wnum;
+                var dperm;
+                var line;
+                var tdelem;
+                var printdd = 0;
+                var row;
+                var resultstr = "";
+                var dateobj = new Date(yyyy, mm, dd);
+                var today = new Date();
+                var today_y = today.getFullYear();
+                var today_m = today.getMonth(); // 0..11
+                var today_d = today.getDate();
+                var m2str = new Array("{% trans "January" %}", "{% trans "February" %}", "{% trans "March" %}", "{% trans "April" %}", "{% trans "May" %}", "{% trans "June" %}", "{% trans "July" %}", "{% trans "August" %}", "{% trans "September" %}", "{% trans "October" %}", "{% trans "November" %}", "{% trans "December" %}");
+                resultstr = resultstr.concat(m2str[mm] + " " + yyyy + "\n");
+                resultstr = resultstr.concat("{% trans "WK | Mo Tu We Th Fr Sa Su" %}");
+                wdayIso = dateobj.getDay();
+                // convert from sun=0 to mon=0 (iso 8601):
+                wnum = isoHelper.getWeekNumber(dateobj);
+                wdayIso--;
+                if (wdayIso < 0) {
+                    wdayIso = 6;
+                }
+                // dbg:
+                //alert("wdayIso:"+wdayIso+" wnum:"+wnum+" "+yyyy+"-"+mm+"-"+dd);
+                dperm = dayspermonth(dateobj);
+                line = 0;
+                while (line < 6) {
+                    line++;
+                    row = 0;
+                    resultstr = resultstr.concat("\n");
+                    while (row < 9) {
+                        if (row == 0) {
+                            if (printdd < 2) {
+                                dateobj.setDate(dd);
+                                wnum = isoHelper.getWeekNumber(dateobj);
+                                // put week number
+                                resultstr = resultstr.concat(padd_num_2(wnum));
+                            } else {
+                                // no more dates in this row
+                                resultstr = resultstr.concat("  ");
+                            }
+                            row++;
+                            continue;
+                        }
+                        // the empty row:
+                        if (row == 1) {
+                            if (printdd != 2) {
+                                resultstr = resultstr.concat(" | ");
+                            }
+                            row++;
+                            continue;
+                        }
+                        if (printdd == 0 && row - 2 == wdayIso) {
+                            // start of printing
+                            printdd = 1;
+                        }
+                        if (printdd == 1) {
+                            // put a * where today is
+                            if (yyyy == today_y && mm == today_m && dd == today_d) {
+                                resultstr = resultstr.concat(padd_num_2(dd));
+                                resultstr = resultstr.concat("*");
+                            } else {
+                                resultstr = resultstr.concat(padd_num_2(dd));
+                                resultstr = resultstr.concat(" ");
+                            }
+                            dd++;
+                        } else {
+                            resultstr = resultstr.concat("   ");
+                        }
+                        if (dd > dperm) {
+                            // end of printing days for this month
+                            printdd = 2;
+                        }
+                        row++;
+                    }
+                }
+                return (resultstr);
+            }
+            //--------------------------
+            function fillmcal_txt_form(y) {
+                var m = 0;
+                while (m < 12) {
+                    document.getElementsByName("caltxt" + m)[0].value = fillmcal_txt(y, m);
+                    m++;
+                }
+            }
+            //--------------------------
+
+            // end hiding contents from old browsers  -->
+            init_settings();
+            // end hiding contents from old browsers  -->
+        </script>
+    {% endcompress %}
+{% endblock %}
+
+{% block page_content %}
+
+    <form name="yearcal" onsubmit="return false">
+        <table border="0">
+            <tr class="dont-print">
+                <td>
+                    <input name="y" size="4" type="text" value=""
+                           onchange="updatecal(this.form)" class="form-control"><br>
+                    <input value=" &lt; " onclick="yearmins(this.form)"
+                           type="button">
+                    <input value=" &gt; " onclick="yearplus(this.form)"
+                           type="button">
+                </td>
+            </tr>
+
+            <tr>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt0"
+                              readonly></textarea></td>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt1"
+                              readonly></textarea></td>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt2"
+                              readonly></textarea></td>
+            </tr>
+            <tr>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt3"
+                              readonly></textarea></td>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt4"
+                              readonly></textarea></td>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt5"
+                              readonly></textarea></td>
+            </tr>
+            <tr>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt6"
+                              readonly></textarea></td>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt7"
+                              readonly></textarea></td>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt8"
+                              readonly></textarea></td>
+            </tr>
+            <tr>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt9"
+                              readonly></textarea></td>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt10"
+                              readonly></textarea></td>
+                <td><textarea class="flat" cols="28" rows="8" name="caltxt11"
+                              readonly></textarea></td>
+            </tr>
+
+        </table>
+    </form>
+
+{% endblock %}
+

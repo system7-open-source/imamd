@@ -1,0 +1,46 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% block style_block %}
+    <link rel="stylesheet" href="{% static "select2/select2.css" %}">
+    <link rel="stylesheet" href="{% static "select2-bootstrap-css/select2-bootstrap.css" %}">
+{% endblock %}
+{% block page_content %}
+    <div class="row">
+        <div class="col-md-6 panel">
+            <div class="panel-heading"><i class="icon-edit"></i> Edit report
+            </div>
+            {% crispy form %}
+        </div>
+        <div class="col-md-6 panel">
+            <div class="panel-heading"><i class="icon-time"></i> Edit history
+            </div>
+            <table class="table table-bordered table-striped table-condensed">
+                <thead>
+                <tr>
+                    <th>{% trans 'Time' %}</th>
+                    <th>{% trans 'User' %}</th>
+                    <th>{% trans 'Comment' %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for version in versions %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'report_history' obj_id=version.object_id version_id=version.pk %}">{{ version.revision.date_created|date:"H:i:s d/m/Y" }}</a>
+                        </td>
+                        <td>{{ version.revision.user }}</td>
+                        <td>{{ version.revision.comment }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+{% block tail_script %}
+    <script src="{% static "stringjs/lib/string.js" %}"></script>
+    <script src="{% static "select2/select2.js" %}"></script>
+    <script src="{% static "js/filters.js" %}"></script>
+{% endblock %}

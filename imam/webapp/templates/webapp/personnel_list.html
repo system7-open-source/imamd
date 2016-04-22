@@ -1,0 +1,78 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load bootstrap_pagination %}
+{% load crispy_forms_tags %}
+{% block style_block %}
+    <link rel="stylesheet" href="{% static "select2/select2.css" %}">
+    <link rel="stylesheet" href="{% static "select2-bootstrap-css/select2-bootstrap.css" %}">
+{% endblock %}
+{% block page_content %}
+    <div class="row">
+        <div class="col-md-12">
+            <h3><i class="glyphicon glyphicon-user"></i> {% trans "Personnel" %}
+            </h3>
+
+            <div class="well well-sm">
+                <button class="btn btn-primary" data-target="#filterModal"
+                        type="button" data-toggle="modal">
+                    <i class="glyphicon glyphicon-filter"></i>Filter personnel
+                </button>
+            </div>
+            {% if object_list %}
+                <table class="table table-striped table-bordered" width="100%">
+                    <thead>
+                    <tr>
+                        <th>{% trans "Name" %}</th>
+                        <th>{% trans "Location" %}</th>
+                        <th>{% trans "Position" %}</th>
+                        <th>{% trans "Mobile" %}</th>
+                        <th>{% trans "Email" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for worker in object_list %}
+                        <tr>
+                            <td>{{ worker.name }}</td>
+                            <td>{{ worker.site }}</td>
+                            <td>{{ worker.position }}</td>
+                            <td>{{ worker.mobile }}</td>
+                            <td>{{ worker.email|default_if_none:'' }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>{% trans "No registered workers" %}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% if is_paginated %}
+        <div class="row">
+            <div class="col-md-12">
+                {% bootstrap_paginate page_obj range=10 %}
+            </div>
+        </div>
+    {% endif %}
+    <div class="modal fade" id="filterModal" role="dialog" aria-hidden="true"
+         aria-labelledby="filterModalLabel" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">×
+                    </button>
+                    <h3 class="modal-title" id="filterModalLabel">Filter personnel</h3>
+                </div>
+                <div class="modal-body">
+                    {% crispy filter_form %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block tail_script %}
+    <script src="{% static "stringjs/lib/string.js" %}"></script>
+    <script src="{% static "select2/select2.js" %}"></script>
+    <script src="{% static "js/filters.js" %}"></script>
+{% endblock %}
