@@ -4,6 +4,8 @@ IMAMD
 
 `IMAMD`_ (IMAM Dashboard) is a project developed for `UNICEF`_ and intended to leverage information technology, libre software ideals and the existing cellular network infrastructure to help in implementation and coordination of Integrated Management of Acute Malnutrition programmes on a local and national level.
 
+Please watch the following short video to see`WHY`_ projects like this one are important.
+
 
 Acronyms and Problem Domain Vocabulary
 **************************************
@@ -164,3 +166,4 @@ E-mail tests are sent to the address defined in environment variable EMAIL_TEST_
 
 .. _IMAMD: https://github.com/system7-open-source/imamd
 .. _UNICEF: http://www.unicef.org/
+.. _WHY: https://youtu.be/MV6P19SuHN8
