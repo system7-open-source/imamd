@@ -166,4 +166,4 @@ E-mail tests are sent to the address defined in environment variable EMAIL_TEST_
 
 .. _IMAMD: https://github.com/system7-open-source/imamd
 .. _UNICEF: http://www.unicef.org/
-.. _WHY: https://youtu.be/MV6P19SuHN8
+.. _WHY: https://vimeo.com/57475304
